@@ -4,6 +4,7 @@ from queue import Queue
 from process_module import Process
 
 MAX_PROCESSES = 1000
+MAX_PRIORITY = 3  # 0 = tempo real, 1-3 = usuario
 
 
 class QueuesManager:
@@ -18,6 +19,8 @@ class QueuesManager:
         self.load_processes(process_file)
 
     def load_processes(self, path: str) -> None:
+        Process.reset_ids()
+
         with open(path, "r") as file:
             lines = [line.strip() for line in file if line.strip()]
 
@@ -42,9 +45,16 @@ class QueuesManager:
             sata_req,
         ) = (field.strip() for field in line.split(","))
 
+        priority = int(priority)
+        if not 0 <= priority <= MAX_PRIORITY:
+            raise ValueError(
+                f"invalid priority {priority} in line '{line}': "
+                f"must be 0 (tempo real) to {MAX_PRIORITY} (usuario)"
+            )
+
         return Process(
             start_time=int(start_time),
-            priority=int(priority),
+            priority=priority,
             process_time=int(process_time),
             workset_size=int(workset_size),
             printer_req=bool(int(printer_req)),
@@ -100,3 +110,10 @@ class QueuesManager:
     def requeue(self, process: Process, current_tick: int) -> None:
         process.priority = min(process.priority + 1, len(self.user_queue))
         self._route(process, current_tick)
+
+    def is_finished(self) -> bool:
+        return (
+            not self.ready_queue
+            and self.real_time_queue.empty()
+            and all(not queue for queue in self.user_queue)
+        )
