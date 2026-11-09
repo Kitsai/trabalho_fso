@@ -1,11 +1,10 @@
-import queue
-import queues_module
-from resources_module import IoManager
 import sys
 
-from memory_module import MemoryManager
 from files_module import FilesManager
+from memory_module import MemoryManager
+from process_module import Process
 from queues_module import QueuesManager
+from resources_module import IoManager
 
 
 class PseudoOs:
@@ -17,13 +16,57 @@ class PseudoOs:
 
         self.clock = 0
 
-    def run(self):
-        finished = False
-        while not finished:
+    def run(self) -> None:
+        current_process: Process | None = None
+
+        while current_process is not None or not self.queues.is_finished():
             self.queues.tick(self.clock)
 
-            finished = self.queues.is_finished()
+            if current_process is None:
+                current_process = self.queues.next_process()
+                if current_process is not None and not current_process.started:
+                    self._announce(current_process)
+
+            if current_process is not None:
+                finished = self._run_instruction(current_process)
+
+                if finished:
+                    self._finish(current_process)
+                    current_process = None
+                elif current_process.priority != 0:
+                    self.queues.requeue(current_process, self.clock)
+                    current_process = None
+
             self.clock += 1
+
+    def _announce(self, process: Process) -> None:
+        print("dispatcher => ")
+        print(f"    PID: {process.pid}")
+        print(f"    frames: {process.workset_size}")
+        print(f"    priority: {process.priority}")
+        print(f"    time: {process.process_time}")
+        print(f"    printers: {int(process.printer_req)}")
+        print(f"    scanners: {int(process.scanner_req)}")
+        print(f"    modems: {int(process.modem_req)}")
+        print(f"    drives: {int(process.sata_req)}")
+
+        # TODO: alocar recursos de I/O (self.io.allocate(process))
+
+        print(f"process {process.pid} =>")
+        print(f"P{process.pid} STARTED")
+        process.started = True
+
+    def _run_instruction(self, process: Process) -> bool:
+        process.instructions_run += 1
+        print(f"P{process.pid} instruction {process.instructions_run}")
+
+        process.remaining_time -= 1
+        return process.remaining_time == 0
+
+    def _finish(self, process: Process) -> None:
+        print(f"P{process.pid} return SIGINT")
+
+        # TODO: liberar recursos de I/O (self.io.release(process))
 
 
 if __name__ == "__main__":

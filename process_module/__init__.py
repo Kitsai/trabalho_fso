@@ -29,3 +29,6 @@ class Process:
         self.sata_req = sata_req
 
         self.waiting_since: int = start_time
+        self.remaining_time: int = process_time
+        self.instructions_run: int = 0
+        self.started: bool = False

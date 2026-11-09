@@ -1,5 +1,4 @@
 from collections import deque
-from queue import Queue
 
 from process_module import Process
 
@@ -98,7 +97,7 @@ class QueuesManager:
             self.user_queue[level] = still_waiting
 
     def next_process(self) -> Process | None:
-        if not self.real_time_queue:
+        if self.real_time_queue:
             return self.real_time_queue.popleft()
 
         for queue in self.user_queue:
