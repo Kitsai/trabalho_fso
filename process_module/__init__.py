@@ -1,6 +1,10 @@
 class Process:
     next_id: int = 0
 
+    @classmethod
+    def reset_ids(cls) -> None:
+        cls.next_id = 0
+
     def __init__(
         self,
         start_time: int,
