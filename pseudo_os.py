@@ -16,12 +16,13 @@ class PseudoOs:
         self.memory = MemoryManager()
 
         self.clock = 0
-        self.finished = False
 
     def run(self):
-        while not self.finished:
+        finished = False
+        while not finished:
             self.queues.tick(self.clock)
 
+            finished = self.queues.is_finished()
             self.clock += 1
 
 
