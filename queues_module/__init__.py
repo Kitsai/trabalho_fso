@@ -12,7 +12,7 @@ class QueuesManager:
     AGING_THRESHOLD = 20  # ticks esperando antes de promover de prioridade
 
     def __init__(self, process_file: str) -> None:
-        self.real_time_queue = Queue[Process]()
+        self.real_time_queue = deque[Process]()
         self.user_queue: list[deque[Process]] = [deque(), deque(), deque()]
         self.ready_queue: deque[Process] = deque()
 
@@ -76,7 +76,7 @@ class QueuesManager:
         process.waiting_since = current_tick
 
         if process.priority == 0:
-            self.real_time_queue.put(process)
+            self.real_time_queue.append(process)
         else:
             self.user_queue[process.priority - 1].append(process)
 
@@ -98,8 +98,8 @@ class QueuesManager:
             self.user_queue[level] = still_waiting
 
     def next_process(self) -> Process | None:
-        if not self.real_time_queue.empty():
-            return self.real_time_queue.get()
+        if not self.real_time_queue:
+            return self.real_time_queue.popleft()
 
         for queue in self.user_queue:
             if queue:
@@ -114,6 +114,6 @@ class QueuesManager:
     def is_finished(self) -> bool:
         return (
             not self.ready_queue
-            and self.real_time_queue.empty()
+            and not self.real_time_queue
             and all(not queue for queue in self.user_queue)
         )
