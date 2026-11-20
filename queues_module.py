@@ -19,7 +19,6 @@ class QueuesManager:
         """
         self.real_time_queue = deque[Process]()
         self.user_queues: list[deque[Process]] = [deque(), deque(), deque()]
-        self.ready_queue: deque[Process]
 
         self.initializing_queue: deque[Process] = deque()
 

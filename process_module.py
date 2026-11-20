@@ -1,5 +1,23 @@
+from dataclasses import dataclass
+from typing import ClassVar
+
+
+@dataclass
 class Process:
-    next_id: int = 0
+    next_id: ClassVar[int] = 0
+
+    pid: int
+    priority: int
+    process_time: int
+    workset_size: int
+    printer_req: bool
+    scanner_req: bool
+    modem_req: bool
+    sata_req: bool
+    waiting_since: int
+    remaining_time: int
+    instructions_run: int = 0
+    starter: bool = False
 
     @classmethod
     def reset_ids(cls) -> None:
@@ -28,7 +46,5 @@ class Process:
         self.modem_req = modem_req
         self.sata_req = sata_req
 
-        self.waiting_since: int = start_time
-        self.remaining_time: int = process_time
-        self.instructions_run: int = 0
-        self.started: bool = False
+        self.waiting_since = start_time
+        self.remaining_time = process_time
