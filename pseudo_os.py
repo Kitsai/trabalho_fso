@@ -1,6 +1,7 @@
 import sys
 
 from files_module import FilesManager
+from input import read_input
 from memory_module import MemoryManager
 from process_module import Process
 from queues_module import QueuesManager
@@ -9,7 +10,8 @@ from resources_module import IoManager
 
 class PseudoOs:
     def __init__(self, processes: str, operations: str, strings: str):
-        self.queues = QueuesManager(processes)
+        self.context = read_input(processes, operations, strings)
+        self.queues = QueuesManager(self.context)
         self.files = FilesManager()
         self.io = IoManager()
         self.memory = MemoryManager()

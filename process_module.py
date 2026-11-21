@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
+from input import ProcessData
+
 
 @dataclass
 class Process:
@@ -17,7 +19,7 @@ class Process:
     waiting_since: int
     remaining_time: int
     instructions_run: int = 0
-    starter: bool = False
+    started: bool = False
 
     @classmethod
     def reset_ids(cls) -> None:
@@ -25,26 +27,19 @@ class Process:
 
     def __init__(
         self,
-        start_time: int,
-        priority: int,
-        process_time: int,
-        workset_size: int,
-        printer_req: bool,
-        scanner_req: bool,
-        modem_req: bool,
-        sata_req: bool,
+        data: ProcessData
     ) -> None:
         self.pid = Process.next_id
         Process.next_id += 1
 
-        self.start_time = start_time
-        self.priority = priority
-        self.process_time = process_time
-        self.workset_size = workset_size
-        self.printer_req = printer_req
-        self.scanner_req = scanner_req
-        self.modem_req = modem_req
-        self.sata_req = sata_req
+        self.start_time = data.start_time
+        self.priority = data.priority
+        self.process_time = data.process_time
+        self.workset_size = data.workset_size
+        self.printer_req = data.printer_req
+        self.scanner_req = data.scanner_req
+        self.modem_req = data.modem_req
+        self.sata_req = data.sata_req
 
-        self.waiting_since = start_time
-        self.remaining_time = process_time
+        self.waiting_since = data.start_time
+        self.remaining_time = data.process_time
