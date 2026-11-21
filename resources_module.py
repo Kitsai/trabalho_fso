@@ -1,5 +1,4 @@
 from enum import Enum
-from threading import Semaphore
 
 from process_module import Process
 
@@ -20,4 +19,14 @@ RESOURCE_CAPACITY = {
 
 
 class IoManager:
-    pass
+    def allocate(self, process: Process) -> bool:
+        """Tenta alocar recursos pedidos pelo processo.
+
+        ao tentar alocar sempre tenta primeiro os recursos em ordem crescente (passivel de mudanca)
+
+        Args:
+            process: Processo que tenta alocar dispositivos
+        Returns:
+            bool: Indica se conseguiu alocar ou nao
+        """
+        return True

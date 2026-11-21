@@ -1,8 +1,16 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import ClassVar
 
 from input import ProcessData
 
+
+class ProcessState(Enum):
+    New = 0
+    Ready = 1
+    Running = 2
+    Blocked = 3
+    Finished = 4
 
 @dataclass
 class Process:
@@ -19,7 +27,8 @@ class Process:
     waiting_since: int
     remaining_time: int
     instructions_run: int = 0
-    started: bool = False
+
+    state: ProcessState = ProcessState.New
 
     @classmethod
     def reset_ids(cls) -> None:

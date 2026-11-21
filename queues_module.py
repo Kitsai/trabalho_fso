@@ -2,7 +2,7 @@ from collections import deque
 
 from constants import MAX_PRIORITY
 from input import InputContext
-from process_module import Process
+from process_module import Process, ProcessState
 
 
 class QueuesManager:
@@ -16,12 +16,18 @@ class QueuesManager:
 
         A queue de pronto simplifica o acesso
         """
-        self.real_time_queue = deque[Process]()
-        self.user_queues: list[deque[Process]] = [deque(), deque(), deque()]
+        self.real_time_queue: deque[int] = deque()
+        self.user_queues: list[deque[int]] = [deque(), deque(), deque()]
+        self.arrived_queue: deque[int] = deque()
+
+        self.pcb_table: dict[int, Process] = {}
 
         self.initializing_queue: deque[Process] = deque()
 
         self.load_processes(ctx)
+
+    def get_process(self, pid: int) -> Process | None:
+        return self.pcb_table.get(pid)
 
     def load_processes(self, ctx: InputContext) -> None:
         """Cria Processos com base no arquivo passado
@@ -50,13 +56,29 @@ class QueuesManager:
         Args:
             current_tick: tick atual da simulação
         """
+        self._update_initialization(current_tick)
+        self._update_arrived(current_tick)
+
+        self._age_waiting_processes(current_tick)
+
+    def _update_initialization(self, current_tick: int):
         while (
             self.initializing_queue
             and self.initializing_queue[0].start_time == current_tick
         ):
-            self._route(self.initializing_queue.popleft(), current_tick)
+            p = self.initializing_queue.popleft();
+            self.pcb_table[p.pid] = p
+            self.arrived_queue.append(p.pid)
 
-        self._age_waiting_processes(current_tick)
+    def _update_arrived(self, current_tick):
+        cant_start = deque()
+        while self.arrived_queue:
+            p = self.pcb_table[self.arrived_queue.popleft()]
+
+            # TODO: verifica se consegue alocar memoria
+
+            p.state = ProcessState.Ready
+            self._route(p, current_tick)
 
     def _age_waiting_processes(self, current_tick: int) -> None:
         """Verifica idade de cada processo para verificar se ele pode subir de prioridade
@@ -66,12 +88,14 @@ class QueuesManager:
         """
         for i in range(1, MAX_PRIORITY):
             aged = []
-            for p in self.user_queues[i]:
+            for pid in self.user_queues[i]:
+                p = self.pcb_table[pid]
                 if current_tick - p.waiting_since > QueuesManager.AGING_THRESHOLD:
-                    aged.append(p)
+                    aged.append(pid)
 
-            for p in aged:
-                self.user_queues[i].remove(p)
+            for pid in aged:
+                self.user_queues[i].remove(pid)
+                p = self.pcb_table[pid]
                 p.priority -= 1
                 self._route(p, current_tick)
 
@@ -85,17 +109,17 @@ class QueuesManager:
         process.waiting_since = current_tick
 
         if process.priority == 0:
-            self.real_time_queue.append(process)
+            self.real_time_queue.append(process.pid)
         else:
-            self.user_queues[process.priority - 1].append(process)
+            self.user_queues[process.priority - 1].append(process.pid)
 
     def next_process(self) -> Process | None:
         if self.real_time_queue:
-            return self.real_time_queue.popleft()
+            return self.pcb_table[self.real_time_queue.popleft()]
 
         for queue in self.user_queues:
             if queue:
-                return queue.popleft()
+                return self.pcb_table[queue.popleft()]
 
         return None
 
@@ -106,6 +130,7 @@ class QueuesManager:
     def is_finished(self) -> bool:
         return (
             not self.initializing_queue
+            and not self.arrived_queue
             and not self.real_time_queue
             and all(not queue for queue in self.user_queues)
         )

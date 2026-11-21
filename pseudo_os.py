@@ -3,7 +3,7 @@ import sys
 from files_module import FilesManager
 from input import read_input
 from memory_module import MemoryManager
-from process_module import Process
+from process_module import Process, ProcessState
 from queues_module import QueuesManager
 from resources_module import IoManager
 
@@ -24,10 +24,12 @@ class PseudoOs:
         while current_process is not None or not self.queues.is_finished():
             self.queues.tick(self.clock)
 
-            if current_process is None:
-                current_process = self.queues.next_process()
-                if current_process is not None and not current_process.started:
-                    self._announce(current_process)
+            while current_process is None:
+                candidate = self.queues.next_process()
+                if candidate is None:
+                    break
+                if self._can_dispatch(candidate):
+                    current_process = candidate
 
             if current_process is not None:
                 finished = self._run_instruction(current_process)
@@ -41,6 +43,14 @@ class PseudoOs:
 
             self.clock += 1
 
+    def _can_dispatch(self, process: Process) -> bool:
+        if process.instructions_run > 0:
+            return True
+        if not self.io.allocate(process):
+            return False
+        self._announce(process)
+        return True
+
     def _announce(self, process: Process) -> None:
         print("dispatcher => ")
         print(f"    PID: {process.pid}")
@@ -51,12 +61,9 @@ class PseudoOs:
         print(f"    scanners: {int(process.scanner_req)}")
         print(f"    modems: {int(process.modem_req)}")
         print(f"    drives: {int(process.sata_req)}")
-
-        # TODO: alocar recursos de I/O (self.io.allocate(process))
-
         print(f"process {process.pid} =>")
         print(f"P{process.pid} STARTED")
-        process.started = True
+        process.state = ProcessState.Ready
 
     def _run_instruction(self, process: Process) -> bool:
         process.instructions_run += 1
@@ -69,7 +76,6 @@ class PseudoOs:
         print(f"P{process.pid} return SIGINT")
 
         # TODO: liberar recursos de I/O (self.io.release(process))
-
 
 if __name__ == "__main__":
     argc = len(sys.argv) - 1
