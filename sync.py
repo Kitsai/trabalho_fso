@@ -13,8 +13,12 @@ class Semaphore:
         self._block_queue = deque[int]()
 
     def up(self) -> int | None:
+        if(self._block_queue):
+            pid = self._block_queue.popleft()
+            return pid
+        
         self._semaphore.release()
-        return self._block_queue.popleft() if self._block_queue else None
+        return None
 
     def down(self, pid: int) -> bool:
         acquired = self._semaphore.acquire(blocking=False)
@@ -22,4 +26,4 @@ class Semaphore:
         if not acquired:
             self._block_queue.append(pid)
 
-        return acquired
+        return acquired#
