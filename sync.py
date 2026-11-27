@@ -26,4 +26,4 @@ class Semaphore:
         if not acquired:
             self._block_queue.append(pid)
 
-        return acquired#
+        return acquired
