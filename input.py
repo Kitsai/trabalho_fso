@@ -44,6 +44,7 @@ class InputContext:
     files_ctx: FilesInputContext
     page_requests: list[list[int]]
 
+
 def _parse_process(line: str) -> ProcessData:
     """Faz o parse de uma linha de um processo.
 
@@ -82,24 +83,23 @@ def _parse_process(line: str) -> ProcessData:
         sata_req=bool(int(sata_req)),
     )
 
-def read_processes(path: str) -> list[ProcessData]:
-        with open(path, "r") as file:
-            lines = [line.strip() for line in file if line.strip()]
 
-        return [_parse_process(line) for line in lines]
+def read_processes(path: str) -> list[ProcessData]:
+    with open(path, "r") as file:
+        lines = [line.strip() for line in file if line.strip()]
+
+    return [_parse_process(line) for line in lines]
+
 
 def parse_file(line: str) -> FileData:
-    (
-        file_name,
-        first_block,
-        block_count
-    ) = (field.strip() for field in line.split(","))
+    (file_name, first_block, block_count) = (field.strip() for field in line.split(","))
 
     return FileData(
         file_name=file_name,
         first_block=int(first_block),
         block_count=int(block_count),
     )
+
 
 def parse_file_operation(line: str) -> FileOperationData:
     fields = [field.strip() for field in line.split(",")]
@@ -121,8 +121,9 @@ def parse_file_operation(line: str) -> FileOperationData:
         process_id=process_id,
         op_code=op_code,
         file_name=file_name,
-        create_blocks=create_blocks
+        create_blocks=create_blocks,
     )
+
 
 def read_files(path: str) -> FilesInputContext:
     with open(path, "r") as file:
@@ -130,13 +131,15 @@ def read_files(path: str) -> FilesInputContext:
 
     total_blocks = int(lines[0].strip())
     occupied_segments = int(lines[1].strip())
-    files = [parse_file(line) for line in lines[2:2+occupied_segments]]
-    operations = [parse_file_operation(line) for line in lines[2+occupied_segments:]]
+    files = [parse_file(line) for line in lines[2 : 2 + occupied_segments]]
+    operations = [parse_file_operation(line) for line in lines[2 + occupied_segments :]]
 
     return FilesInputContext(total_blocks, occupied_segments, files, operations)
 
+
 def get_pages(line: str) -> list[int]:
     return [int(page.strip()) for page in line.split(",")]
+
 
 def read_strings(path: str) -> list[list[int]]:
     with open(path, "r") as file:
@@ -144,5 +147,10 @@ def read_strings(path: str) -> list[list[int]]:
 
     return [get_pages(line) for line in lines]
 
+
 def read_input(processes_path: str, files_path: str, strings_path: str) -> InputContext:
-    return InputContext(read_processes(processes_path), read_files(files_path), read_strings(strings_path))
+    return InputContext(
+        read_processes(processes_path),
+        read_files(files_path),
+        read_strings(strings_path),
+    )

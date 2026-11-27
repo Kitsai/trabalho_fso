@@ -12,6 +12,7 @@ class ProcessState(Enum):
     Blocked = 3
     Finished = 4
 
+
 @dataclass
 class Process:
     next_id: ClassVar[int] = 0
@@ -34,10 +35,7 @@ class Process:
     def reset_ids(cls) -> None:
         cls.next_id = 0
 
-    def __init__(
-        self,
-        data: ProcessData
-    ) -> None:
+    def __init__(self, data: ProcessData) -> None:
         self.pid = Process.next_id
         Process.next_id += 1
 
