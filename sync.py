@@ -13,7 +13,7 @@ class Semaphore:
         self._block_queue = deque[int]()
 
     def up(self) -> int | None:
-        if(self._block_queue):
+        if self._block_queue:
             pid = self._block_queue.popleft()
             return pid
         
